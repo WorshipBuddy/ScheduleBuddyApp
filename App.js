@@ -6,6 +6,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import Login from './screens/login';
 import Dashboard from './screens/dashboard';
+import MainOrgTabs from './screens/org-specific screens/MainOrgTabs';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,7 @@ export default function App() {
             headerLeft: () => null,
           }}
         />
+        <Stack.Screen name="MainOrg" component={MainOrgTabs} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

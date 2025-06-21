@@ -53,8 +53,7 @@ export default function Dashboard({ route, navigation }) {
   }, [user]);
 
   const handlePress = (orgId) => {
-    Alert.alert('Selected Org', `You selected org ID: ${orgId}`);
-    // navigation.navigate('MainOrg', { orgId })
+    navigation.navigate('MainOrg', { orgId });
   };
 
   const renderOrgCard = ({ item }) => (
@@ -80,7 +79,7 @@ export default function Dashboard({ route, navigation }) {
             data={orgs}
             keyExtractor={(item) => item.id}
             renderItem={renderOrgCard}
-            numColumns={2}
+            numColumns={1}
             contentContainerStyle={styles.grid}
         />
         ) : (
