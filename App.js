@@ -12,7 +12,8 @@ import {
   TouchableOpacity,
   Modal,
   Text,
-  StyleSheet
+  StyleSheet,
+  TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -26,6 +27,8 @@ export default function App() {
   const [initialRoute, setInitialRoute] = useState(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [navigationRef, setNavigationRef] = useState(null);
+  const [joinOrgVisible, setJoinOrgVisible] = useState(false);
+  const [orgId, setOrgId] = useState('');
 
   useEffect(() => {
     const checkStoredUser = async () => {
@@ -50,6 +53,40 @@ export default function App() {
     );
   }
 
+  const handleJoinOrg = async () => {
+  const email = await AsyncStorage.getItem('userEmail');
+  const first = await AsyncStorage.getItem('firstName');
+  const last = await AsyncStorage.getItem('lastName');
+
+  try {
+    const res = await fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        first_name: first,
+        last_name: last,
+        positions: []
+      })
+    });
+
+    const data = await res.json();
+    console.log(data)
+
+    if (!res.ok) throw new Error(data.detail || 'Join failed');
+
+    setJoinOrgVisible(false);
+    navigationRef?.navigate('Dashboard', { refresh: true });
+  } catch (err) {
+    console.log(err)
+  const errorMessage =
+    typeof err === 'string'
+      ? err
+      : err?.message || JSON.stringify(err);
+  alert(errorMessage);
+}
+};
+
   return (
     <>
       <NavigationContainer ref={nav => setNavigationRef(nav)}>
@@ -61,12 +98,18 @@ export default function App() {
             options={{
               headerBackVisible: false,
               gestureEnabled: false,
-              headerRight: () => (
+              headerLeft: () => (
                 <TouchableOpacity onPress={() => setSettingsVisible(true)} style={{ marginRight: 16 }}>
                   <Ionicons name="cog-outline" size={28} color="#10245c" />
                 </TouchableOpacity>
               ),
+              headerRight: () => (
+              <TouchableOpacity onPress={() => setJoinOrgVisible(true)} style={{ marginLeft: 16 }}>
+                <Ionicons name="add" size={28} color="#10245c" />
+              </TouchableOpacity>
+            ),
             }}
+            
           />
           <Stack.Screen name="MainOrg" component={MainOrgTabs} options={{ headerShown: false }} />
         </Stack.Navigator>
@@ -94,6 +137,33 @@ export default function App() {
           </View>
         </View>
       </Modal>
+      <Modal visible={joinOrgVisible} animationType="slide" transparent>
+      <View style={styles.overlay}>
+        <View style={styles.popup}>
+          <Text style={styles.optionText}>Enter Organization ID</Text>
+          <View style={{ marginVertical: 12 }}>
+            <TextInput
+              style={styles.input}
+              placeholder="Organization ID"
+              value={orgId}
+              onChangeText={setOrgId}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={handleJoinOrg}
+            style={styles.optionButton}
+          >
+            <Text style={styles.optionText}>Join</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setJoinOrgVisible(false)}
+            style={styles.cancelButton}
+          >
+            <Text style={{ fontWeight: '600', color: '#10245c' }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
     </>
   );
 }
@@ -128,4 +198,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     alignItems: 'center',
   },
+  input: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: '#f4f4f4',
+    borderRadius: 8,
+    fontSize: 16,
+    color: '#333',
+  }
 });

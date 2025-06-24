@@ -27,7 +27,7 @@ export default function Dashboard({ route, navigation }) {
     loadUser();
   }, []);
 
-  useEffect(() => {
+
     const fetchOrgs = async () => {
       if (!user) return;
       try {
@@ -49,6 +49,13 @@ export default function Dashboard({ route, navigation }) {
       }
     };
 
+  useEffect(() => {
+    if (route.params?.refresh) {
+      fetchOrgs(); // triggers re-fetch
+    }
+  }, [route.params]);
+
+  useEffect(() => {
     fetchOrgs();
   }, [user]);
 

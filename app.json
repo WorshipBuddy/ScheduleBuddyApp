@@ -2,15 +2,15 @@
   "expo": {
     "name": "ScheduleBuddy",
     "slug": "ScheduleBuddyApp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#0c245e"
     },
     "ios": {
       "supportsTablet": true,
