@@ -29,10 +29,32 @@ export default function App() {
   const [navigationRef, setNavigationRef] = useState(null);
   const [joinOrgVisible, setJoinOrgVisible] = useState(false);
   const [orgId, setOrgId] = useState('');
+  const [isDemoUser, setIsDemoUser] = useState(false);
+
+
+useEffect(() => {
+  const clearIfDemo = async () => {
+    const isDemo = await AsyncStorage.getItem('isDemoUser');
+    if (isDemo === 'true') {
+      await AsyncStorage.clear();
+    }
+  };
+  clearIfDemo();
+}, []);
+
+useEffect(() => {
+  const unsubscribe = navigationRef?.addListener('state', async () => {
+    const isDemo = await AsyncStorage.getItem('isDemoUser');
+    setIsDemoUser(isDemo === 'true');
+  });
+  return unsubscribe;
+}, [navigationRef]);
 
   useEffect(() => {
     const checkStoredUser = async () => {
       const email = await AsyncStorage.getItem('userEmail');
+      const isDemo = await AsyncStorage.getItem('isDemoUser');
+      setIsDemoUser(isDemo === 'true');
       setInitialRoute(email ? 'Dashboard' : 'Login');
     };
 
@@ -93,24 +115,24 @@ export default function App() {
         <Stack.Navigator initialRouteName={initialRoute}>
           <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
           <Stack.Screen
-            name="Dashboard"
-            component={Dashboard}
-            options={{
-              headerBackVisible: false,
-              gestureEnabled: false,
-              headerLeft: () => (
-                <TouchableOpacity onPress={() => setSettingsVisible(true)} style={{ marginRight: 16 }}>
-                  <Ionicons name="cog-outline" size={28} color="#10245c" />
-                </TouchableOpacity>
-              ),
-              headerRight: () => (
-              <TouchableOpacity onPress={() => setJoinOrgVisible(true)} style={{ marginLeft: 16 }}>
-                <Ionicons name="add" size={28} color="#10245c" />
-              </TouchableOpacity>
-            ),
-            }}
-            
-          />
+  name="Dashboard"
+  component={Dashboard}
+  options={() => ({
+    headerBackVisible: false,
+    gestureEnabled: false,
+    headerLeft: () => (
+      <TouchableOpacity onPress={() => setSettingsVisible(true)} style={{ marginRight: 16 }}>
+        <Ionicons name="cog-outline" size={28} color="#10245c" />
+      </TouchableOpacity>
+    ),
+    headerRight: () =>
+      !isDemoUser ? (
+        <TouchableOpacity onPress={() => setJoinOrgVisible(true)} style={{ marginLeft: 16 }}>
+          <Ionicons name="add" size={28} color="#10245c" />
+        </TouchableOpacity>
+      ) : null,
+  })}
+/>
           <Stack.Screen name="MainOrg" component={MainOrgTabs} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>

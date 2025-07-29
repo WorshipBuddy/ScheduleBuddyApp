@@ -7,6 +7,7 @@ export default function Dashboard({ route, navigation }) {
   const [user, setUser] = useState(route?.params?.user || null);
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDemoUser, setIsDemoUser] = useState(false);
   const API_BASE = 'https://api.worshipbuddy.org';
 
   useEffect(() => {
@@ -27,6 +28,14 @@ export default function Dashboard({ route, navigation }) {
     loadUser();
   }, []);
 
+
+    useEffect(() => {
+      const checkDemo = async () => {
+        const demoFlag = await AsyncStorage.getItem('isDemoUser');
+        setIsDemoUser(demoFlag === 'true');
+      };
+      checkDemo();
+    }, []);
 
     const fetchOrgs = async () => {
       if (!user) return;

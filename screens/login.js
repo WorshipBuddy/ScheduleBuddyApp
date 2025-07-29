@@ -237,34 +237,35 @@ export default function Login({ navigation }) {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-  style={[styles.button, { backgroundColor: '#6c757d', marginTop: 12 }]}
-  onPress={async () => {
-    const demoUser = {
-      first_name: 'Demo',
-      last_name: 'User',
-      email: 'support@worshipbuddy.org',
-      church: 'Demo Church',
-      schedulebuddy: {
-        organizations: [
-          {
-            name: 'Demo Org',
-            id: 'demo-org-id',
-          },
-        ],
-      },
-    };
+          style={[styles.button, { backgroundColor: '#6c757d', marginTop: 12 }]}
+          onPress={async () => {
+            const demoUser = {
+              first_name: 'Demo',
+              last_name: 'User',
+              email: 'support@worshipbuddy.org',
+              church: 'Demo Church',
+              schedulebuddy: {
+                organizations: [
+                  {
+                    name: 'Demo Org',
+                    id: 'demo-org-id',
+                  },
+                ],
+              },
+            };
 
-    await AsyncStorage.multiSet([
-      ['userEmail', demoUser.email],
-      ['firstName', demoUser.first_name],
-      ['lastName', demoUser.last_name],
-      ['church', demoUser.church],
-      ['organizations', JSON.stringify(demoUser.schedulebuddy.organizations)],
-    ]);
+            await AsyncStorage.multiSet([
+              ['userEmail', demoUser.email],
+              ['firstName', demoUser.first_name],
+              ['lastName', demoUser.last_name],
+              ['church', demoUser.church],
+              ['organizations', JSON.stringify(demoUser.schedulebuddy.organizations)],
+              ['isDemoUser', 'true']
+            ]);
 
-    navigation.navigate('Dashboard', { user: demoUser });
-  }}
->
+            navigation.navigate('Dashboard', { user: demoUser });
+          }}
+        >
   <Text style={styles.buttonText}>Try Demo</Text>
 </TouchableOpacity>
       </View>
