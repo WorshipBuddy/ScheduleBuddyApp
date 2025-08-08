@@ -26,50 +26,60 @@ export default function ScheduleScreen({ orgId }) {
   }, []);
 
   const fetchServices = async (email) => {
-    try {
-        const [serviceRes, userRes] = await Promise.all([
-        fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/services`),
-        fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/users`)
-        ]);
+  try {
+    const [serviceRes, userRes] = await Promise.all([
+      fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/services`),
+      fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/users`)
+    ]);
 
-        const allServices = await serviceRes.json();
-        const allUsers = await userRes.json();
+    const allServices = await serviceRes.json();
+    const allUsers = await userRes.json();
+    const user = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const now = new Date();
 
-        const user = allUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-        const now = new Date();
-
-        const upcomingAssignedServices = allServices
-        .filter(service => new Date(service.end_datetime) > now)
-        .map(service => {
-            const myAssignments = [];
-
-            for (const team of service.teams || []) {
-            for (const [positionName, assigned] of Object.entries(team.positions || {})) {
-                const assignedNames = Array.isArray(assigned) ? assigned : [assigned];
-                const matches = assignedNames.some(e => e?.toLowerCase?.() === email.toLowerCase());
-
-                if (matches) {
-                myAssignments.push({ team: team.team_name, position: positionName });
-                }
-            }
-            }
-
-            if (myAssignments.length > 0) {
-            return {
-                ...service,
-                assignments: myAssignments,
-            };
-            }
-
-            return null;
-        })
-        .filter(Boolean);
-
-        setServices(upcomingAssignedServices);
-    } catch (err) {
-        console.error("Failed to fetch services:", err);
-    }
+    const hasPermission = (team) => {
+      if (!team.permissions || !team.permissions[email]) return false;
+      const roles = team.permissions[email];
+      return roles.includes('Viewer') || roles.includes('Scheduler') || roles.includes('Admin');
     };
+
+    const upcomingServices = allServices
+      .filter(service => new Date(service.end_datetime) > now)
+      .map(service => {
+        const assignments = [];
+
+        for (const team of service.teams || []) {
+          for (const [positionName, assigned] of Object.entries(team.positions || {})) {
+            const assignedNames = Array.isArray(assigned) ? assigned : [assigned];
+            for (const name of assignedNames) {
+              if (name) {
+                assignments.push({
+                  team: team.team_name,
+                  position: positionName,
+                  email: name,
+                });
+              }
+            }
+          }
+        }
+
+        const isAssigned = assignments.some(a => a.email?.toLowerCase() === email.toLowerCase());
+        const isPrivileged = (service.teams || []).some(t => hasPermission(t));
+        const isOrgAdmin = user?.global_permissions?.includes?.('Org Admin') || user?.global_permissions?.includes?.('Owner');
+
+        if (isAssigned || isPrivileged || isOrgAdmin) {
+          return { ...service, assignments };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+
+    setServices(upcomingServices);
+  } catch (err) {
+    console.error("Failed to fetch services:", err);
+  }
+};
 
   const fetchInabilityDates = async (email) => {
     const res = await fetch(`https://api.worshipbuddy.org/schedulebuddy/organizations/${orgId}/users`);
@@ -120,33 +130,38 @@ export default function ScheduleScreen({ orgId }) {
         data={services}
         keyExtractor={item => item._id}
         renderItem={({ item }) => {
-        const groupedAssignments = item.assignments.reduce((acc, { team, position }) => {
-            if (!acc[team]) acc[team] = [];
-            acc[team].push(position);
-            return acc;
-        }, {});
+        const groupedAssignments = {};
+
+        item.assignments.forEach(({ team, position, email }) => {
+          const userObj = allUsers.find(u => u.email === email);
+          const name = userObj ? `${userObj.first_name} ${userObj.last_name}` : email;
+          if (!groupedAssignments[team]) groupedAssignments[team] = [];
+          groupedAssignments[team].push({ position, name });
+        });
 
         return (
-            <TouchableOpacity onPress={() => setSelectedService(item)}>
+          <TouchableOpacity onPress={() => setSelectedService(item)}>
             <View style={styles.card}>
-            <Text style={styles.title}>{item.service_name}</Text>
-            <Text>📍 {item.location}</Text>
-            <Text>🕒 {new Date(item.start_datetime).toLocaleString()}</Text>
+              <Text style={styles.title}>{item.service_name}</Text>
+              <Text>📍 {item.location}</Text>
+              <Text>🕒 {new Date(item.start_datetime).toLocaleString()}</Text>
 
-            <View style={{ marginTop: 12 }}>
+              <View style={{ marginTop: 12 }}>
                 {Object.entries(groupedAssignments).map(([team, positions]) => (
-                <View key={team} style={{ marginTop: 8 }}>
+                  <View key={team} style={{ marginTop: 8 }}>
                     <Text style={{ fontWeight: '600', color: '#2d3748' }}>{team}</Text>
-                    {positions.map((pos, i) => (
-                    <Text key={i} style={styles.assignmentText}>• {pos}</Text>
+                    {positions.map((p, i) => (
+                      <Text key={i} style={styles.assignmentText}>
+                        • {p.position} — <Text style={{ fontStyle: 'italic' }}>{p.name}</Text>
+                      </Text>
                     ))}
-                </View>
+                  </View>
                 ))}
+              </View>
             </View>
-            </View>
-            </TouchableOpacity>
+          </TouchableOpacity>
         );
-        }}
+      }}
         ListEmptyComponent={<Text style={{ textAlign: 'center', marginTop: 20 }}>No upcoming services.</Text>}
       />
 

@@ -136,7 +136,7 @@ export default function MainOrgTabs({ route }) {
             ),
           }}
         >
-          {() => <ServicesScreen orgId={orgId} />}
+          {() => <ServicesScreen orgId={orgId} permissions={permissions} />}
         </Tab.Screen>
       )}
 
