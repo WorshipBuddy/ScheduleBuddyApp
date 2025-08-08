@@ -620,6 +620,78 @@ const handleAddPerson = async () => {
               />
             </View>
 
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Phone</Text>
+              <TextInput
+                value={formState.phone}
+                onChangeText={(text) =>
+                  setFormState((s) => ({ ...s, phone: text }))
+                }
+                style={styles.input}
+                editable={!submitting}
+                placeholder="Phone"
+                keyboardType="phone-pad"
+                inputAccessoryViewID={accessoryID}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
+              />
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Positions</Text>
+              <View style={styles.positionsCheckboxContainer}>
+                {allPositions.map((position) => {
+                  const selected = formState.positions.includes(position);
+                  return (
+                    <TouchableOpacity
+                      key={position}
+                      style={[
+                        styles.positionCheckboxRow,
+                        selected && styles.positionCheckboxRowSelected,
+                      ]}
+                      onPress={() => togglePosition(position)}
+                      activeOpacity={0.7}
+                      disabled={submitting}
+                    >
+                      <View
+                        style={[
+                          styles.checkbox,
+                          selected && styles.checkboxChecked,
+                        ]}
+                      >
+                        {selected && (
+                          <Ionicons name="checkmark" size={14} color="#fff" />
+                        )}
+                      </View>
+                      <Text style={styles.positionCheckboxLabel}>{position}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Team Permissions</Text>
+              {formState.team_permissions.map((tp, index) => (
+                <View key={tp.team_name} style={styles.teamPermissionRow}>
+                  <Text style={styles.teamName}>{tp.team_name}</Text>
+                  <TeamPermissionDropdown
+                    value={tp.permission}
+                    onChange={(val) => onTeamPermissionChange(tp.team_name, val)}
+                    disabled={submitting}
+                  />
+                </View>
+              ))}
+            </View>
+            <View style={styles.formGroupRow}>
+              <Text style={styles.label}>Org Admin</Text>
+              <Switch
+                value={formState.org_admin}
+                onValueChange={(val) =>
+                  setFormState((s) => ({ ...s, org_admin: val }))
+                }
+                disabled={submitting}
+              />
+            </View>
+
 
 
             {formMessage.text ? (
